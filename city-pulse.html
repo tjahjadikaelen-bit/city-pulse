@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>City Pulse — Smart Commuting Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0e10;
+    --surface: rgba(255,255,255,0.04);
+    --surface-2: rgba(255,255,255,0.07);
+    --surface-3: rgba(255,255,255,0.11);
+    --border: rgba(255,255,255,0.08);
+    --border-2: rgba(255,255,255,0.14);
+    --text-primary: #f0f0ee;
+    --text-secondary: #9a9994;
+    --text-muted: #5c5b57;
+    --accent: #4af0c4;
+    --accent-dim: rgba(74,240,196,0.12);
+    --accent-glow: rgba(74,240,196,0.25);
+    --amber: #f0b44a;
+    --amber-dim: rgba(240,180,74,0.12);
+    --red: #f05c4a;
+    --red-dim: rgba(240,92,74,0.12);
+    --blue: #4a90f0;
+    --blue-dim: rgba(74,144,240,0.12);
+    --purple: #a46af0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background mesh */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(74,240,196,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(74,144,240,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 60% 10%, rgba(164,106,240,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  * { position: relative; z-index: 1; }
+
+  /* Typography */
+  h1, h2, h3, h4 { font-family: 'Syne', sans-serif; letter-spacing: -0.02em; }
+
+  /* Glass utility */
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-2 {
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(13,14,16,0.6);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent), #2ac8a0);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-logo-icon svg { width: 18px; height: 18px; }
+
+  .nav-logo span {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 4px;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 6px 16px;
+    border-radius: 30px;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover, .nav-links a.active {
+    background: var(--surface-3);
+    color: var(--text-primary);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+  }
+
+  .btn-ghost {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .btn-ghost:hover { background: var(--surface-2); color: var(--text-primary); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #0a1a14;
+    font-weight: 600;
+  }
+
+  .btn-accent:hover { background: #6af5d0; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    padding: 120px 32px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,240,196,0.2);
+    border-radius: 40px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero-title {
+    font-size: 62px;
+    font-weight: 800;
+    line-height: 1.03;
+    letter-spacing: -0.04em;
+    margin-bottom: 20px;
+  }
+
+  .hero-title .accent-text {
+    background: linear-gradient(90deg, var(--accent), #8affde);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 36px;
+    max-width: 480px;
+  }
+
+  .hero-ctas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .btn-lg {
+    padding: 12px 28px;
+    font-size: 15px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+  }
+
+  .hero-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .hero-stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Live Dashboard Panel */
+  .dashboard-panel {
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 14px;
+    min-height: 500px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--red-dim);
+    border: 1px solid rgba(240,92,74,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 0.05em;
+  }
+
+  .live-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+
+  /* Map mock */
+  .map-area {
+    border-radius: var(--radius-lg);
+    background: #111318;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    min-height: 260px;
+  }
+
+  .map-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .map-road {
+    position: absolute;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .map-road-h { height: 6px; left: 0; right: 0; border-radius: 3px; }
+  .map-road-v { width: 6px; top: 0; bottom: 0; border-radius: 3px; }
+
+  .traffic-dot {
+    position: absolute;
+    border-radius: 50%;
+    animation: traffic-pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes traffic-pulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+
+  .map-vehicle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    animation: vehicle-move linear infinite;
+  }
+
+  @keyframes vehicle-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(160px); }
+  }
+
+  .map-label {
+    position: absolute;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Route cards */
+  .route-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .route-card {
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .route-card:hover { background: var(--surface-3); border-color: var(--border-2); }
+
+  .route-card.active { border-color: rgba(74,240,196,0.35); background: rgba(74,240,196,0.05); }
+
+  .route-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .route-info { flex: 1; }
+
+  .route-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .route-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .route-time {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* SECTION */
+  .section {
+    padding: 80px 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 48px;
+  }
+
+  /* FEATURES GRID */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .feature-card {
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .feature-card:hover {
+    border-color: var(--border-2);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+  }
+
+  .feature-card-wide {
+    grid-column: span 2;
+  }
+
+  .feature-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    font-size: 22px;
+  }
+
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  /* Big feature with demo */
+  .feature-demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .demo-visual {
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    min-height: 380px;
+  }
+
+  /* TRAFFIC HEATMAP */
+  .heatmap-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+
+  .heatmap-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .heatmap-canvas {
+    border-radius: var(--radius-lg);
+    background: #0a0b0d;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    height: 280px;
+  }
+
+  .hotspot {
+    position: absolute;
+    border-radius: 50%;
+    animation: hspot 4s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes hspot {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  .congestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .congestion-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .cong-rank {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 18px;
+  }
+
+  .cong-bar-wrap {
+    flex: 1;
+  }
+
+  .cong-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .cong-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--red), var(--amber));
+    transition: width 1s ease;
+  }
+
+  .cong-index {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red);
+  }
+
+  /* TRANSPORT MODES */
+  .modes-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .mode-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-pill:hover, .mode-pill.active {
+    border-color: rgba(74,240,196,0.4);
+    background: rgba(74,240,196,0.07);
+    color: var(--accent);
+  }
+
+  /* PAYMENT / SERVICES */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .service-card {
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+
+  .service-card:hover {
+    border-color: var(--border-2);
+    background: var(--surface-2);
+    transform: translateY(-3px);
+  }
+
+  .service-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .service-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .service-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* JOURNEY PLANNER */
+  .planner-panel {
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    max-width: 520px;
+  }
+
+  .planner-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .planner-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    cursor: text;
+    transition: border-color 0.2s;
+  }
+
+  .planner-input:hover { border-color: var(--border-2); }
+
+  .planner-input input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    flex: 1;
+  }
+
+  .planner-input input::placeholder { color: var(--text-muted); }
+
+  .input-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .prefs-row {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .pref-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+
+  .pref-chip.active {
+    background: var(--accent-dim);
+    border-color: rgba(74,240,196,0.3);
+    color: var(--accent);
+  }
+
+  .plan-results {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .plan-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .plan-option:hover { border-color: var(--border-2); }
+
+  .plan-option.best { border-color: rgba(74,240,196,0.3); background: rgba(74,240,196,0.04); }
+
+  .plan-steps {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .plan-step-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .plan-connector { color: var(--text-muted); font-size: 10px; }
+
+  .plan-time {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .plan-price {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .best-badge {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,240,196,0.2);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+  }
+
+  /* TICKER */
+  .alert-ticker {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 64px;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .ticker-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  /* STATS STRIP */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin: 40px 0;
+  }
+
+  .stat-cell {
+    padding: 32px 28px;
+    background: var(--bg);
+    text-align: center;
+  }
+
+  .stat-big {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--accent), #2ac8a0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label-cell {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* TARGETS SECTION */
+  .targets-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .target-card {
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .target-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    border: 1px solid var(--border-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+
+  .target-role {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .target-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 48px 32px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px;
+    max-width: 1280px;
+    margin: 60px auto 0;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-top: 12px;
+    max-width: 240px;
+  }
+
+  .footer-col h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .footer-col a {
+    display: block;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    transition: color 0.2s;
+  }
+
+  .footer-col a:hover { color: var(--text-primary); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+  /* Animations */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fade-up 0.6s ease both; }
+  .fade-in-2 { animation: fade-up 0.6s ease 0.1s both; }
+  .fade-in-3 { animation: fade-up 0.6s ease 0.2s both; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-title { font-size: 40px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-card-wide { grid-column: span 1; }
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .targets-grid { grid-template-columns: 1fr; }
+    footer { grid-template-columns: 1fr; }
+    .heatmap-grid-container { grid-template-columns: 1fr; }
+    .feature-demo-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0a1a14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+      </svg>
+    </div>
+    <span>City Pulse</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="active">Features</a>
+    <a href="#routes">Routes</a>
+    <a href="#traffic">Traffic</a>
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+  </div>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-ghost">Sign In</a>
+    <a href="city-pulse-planner.html" class="btn btn-accent">Plan Journey ›</a>
+  </div>
+</nav>
+
+<!-- ALERT TICKER -->
+<div class="alert-ticker" style="margin-top: 65px;">
+  <div class="ticker-inner">
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--red)"></span>Line 3 — Delays of 8 min due to signal fault at Sudirman</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--amber)"></span>Jl. Thamrin congestion index: HIGH — est. 22 min delay</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--accent)"></span>New TransJakarta corridor open: Blok M → Kemang</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--blue)"></span>Shared bikes available at 48 stations city-wide</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--red)"></span>Incident: Jl. Gatot Subroto — right lane closed</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--amber)"></span>Crowd level: Bundaran HI station — MODERATE</span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--red)"></span>Line 3 — Delays of 8 min due to signal fault at Sudirman</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--amber)"></span>Jl. Thamrin congestion index: HIGH — est. 22 min delay</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--accent)"></span>New TransJakarta corridor open: Blok M → Kemang</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--blue)"></span>Shared bikes available at 48 stations city-wide</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--red)"></span>Incident: Jl. Gatot Subroto — right lane closed</span>
+    <span class="ticker-item"><span class="ticker-dot" style="background:var(--amber)"></span>Crowd level: Bundaran HI station — MODERATE</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="fade-in">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Smart Mobility Platform · Jakarta
+    </div>
+    <h1 class="hero-title">
+      Move Smarter<br>Through the <span class="accent-text">City</span>
+    </h1>
+    <p class="hero-desc">
+      City Pulse integrates every mode of urban transport — subway, bus, ride-hailing, and shared bikes — into one intelligent platform. Real-time data, personalised routes, one tap to go.
+    </p>
+    <div class="hero-ctas">
+      <a href="city-pulse-planner.html" class="btn btn-accent btn-lg">Plan My Route</a>
+      <a href="#traffic" class="btn btn-ghost btn-lg">Live Traffic Map</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">2.4M</div>
+        <div class="hero-stat-label">Daily Commuters</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">18min</div>
+        <div class="hero-stat-label">Avg. Time Saved</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">99.2%</div>
+        <div class="hero-stat-label">Data Uptime</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Dashboard -->
+  <div class="dashboard-panel fade-in-2">
+    <div class="panel-header">
+      <span class="panel-title">Live City View</span>
+      <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+    </div>
+
+    <!-- Mini Map -->
+    <div class="map-area">
+      <div class="map-grid"></div>
+
+      <!-- Roads -->
+      <div class="map-road map-road-h" style="top:45%;"></div>
+      <div class="map-road map-road-h" style="top:65%;"></div>
+      <div class="map-road map-road-h" style="top:25%;"></div>
+      <div class="map-road map-road-v" style="left:30%;"></div>
+      <div class="map-road map-road-v" style="left:55%;"></div>
+      <div class="map-road map-road-v" style="left:75%;"></div>
+
+      <!-- Congestion hotspots -->
+      <div class="hotspot" style="width:80px;height:80px;background:radial-gradient(circle,rgba(240,92,74,0.5),transparent);top:36%;left:47%;transform:translate(-50%,-50%);animation-delay:0s;"></div>
+      <div class="hotspot" style="width:60px;height:60px;background:radial-gradient(circle,rgba(240,180,74,0.45),transparent);top:60%;left:72%;transform:translate(-50%,-50%);animation-delay:1s;"></div>
+      <div class="hotspot" style="width:40px;height:40px;background:radial-gradient(circle,rgba(74,240,196,0.4),transparent);top:22%;left:28%;transform:translate(-50%,-50%);animation-delay:2s;"></div>
+
+      <!-- Labels -->
+      <div class="map-label" style="top:8px;left:8px;">Bundaran HI</div>
+      <div class="map-label" style="bottom:8px;right:8px;">Blok M</div>
+      <div class="map-label" style="top:8px;right:8px;">Sudirman</div>
+
+      <!-- Status overlay -->
+      <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:6px;align-items:center;">
+        <span style="font-size:9px;color:var(--red);background:rgba(240,92,74,0.15);border:1px solid rgba(240,92,74,0.25);padding:2px 6px;border-radius:4px;font-weight:600;">■ Severe</span>
+        <span style="font-size:9px;color:var(--amber);background:rgba(240,180,74,0.15);border:1px solid rgba(240,180,74,0.25);padding:2px 6px;border-radius:4px;font-weight:600;">■ Heavy</span>
+        <span style="font-size:9px;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(74,240,196,0.2);padding:2px 6px;border-radius:4px;font-weight:600;">■ Smooth</span>
+      </div>
+    </div>
+
+    <!-- Route suggestions -->
+    <div class="route-cards">
+      <div class="route-card active">
+        <div class="route-icon" style="background:rgba(74,240,196,0.12);">🚇</div>
+        <div class="route-info">
+          <div class="route-name">MRT + Walk</div>
+          <div class="route-meta">Sudirman → Blok M · 3 stops</div>
+        </div>
+        <div class="route-time">14 min</div>
+      </div>
+      <div class="route-card">
+        <div class="route-icon" style="background:rgba(74,144,240,0.12);">🚌</div>
+        <div class="route-info">
+          <div class="route-name">TransJakarta Express</div>
+          <div class="route-meta">Corridor 1 · 6 stops</div>
+        </div>
+        <div class="route-time">22 min</div>
+      </div>
+      <div class="route-card">
+        <div class="route-icon" style="background:rgba(164,106,240,0.12);">🛵</div>
+        <div class="route-info">
+          <div class="route-name">Ride-Hailing</div>
+          <div class="route-meta">Ojek · Door to door</div>
+        </div>
+        <div class="route-time">31 min</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Platform Features</div>
+  <h2 class="section-title">Everything you need<br>to commute smarter</h2>
+  <p class="section-desc">From planning to payment — City Pulse handles every step of your urban journey, powered by live data and intelligent routing.</p>
+
+  <div class="features-grid">
+    <!-- Feature 1 -->
+    <div class="feature-card">
+      <div class="feature-icon-wrap" style="background:rgba(74,240,196,0.12);">🗺️</div>
+      <div class="feature-title">Multi-modal Route Integration</div>
+      <p class="feature-desc">Combine subway, bus, ride-hailing, and shared vehicles to generate the fastest, cheapest, or most comfortable travel plans — tailored to your exact preferences.</p>
+    </div>
+
+    <!-- Feature 2 -->
+    <div class="feature-card">
+      <div class="feature-icon-wrap" style="background:rgba(74,144,240,0.12);">📡</div>
+      <div class="feature-title">Real-time Traffic Monitoring</div>
+      <p class="feature-desc">Live updates on vehicle locations, road congestion, station crowd density, and service suspensions — refreshed every 30 seconds from city-wide sensor networks.</p>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feature-card">
+      <div class="feature-icon-wrap" style="background:rgba(164,106,240,0.12);">🧠</div>
+      <div class="feature-title">Personalised Recommendations</div>
+      <p class="feature-desc">Smart suggestions based on your habits: regular work routes, preferred departure times, and historical travel records. City Pulse learns to serve you better every day.</p>
+    </div>
+
+    <!-- Feature 4 -->
+    <div class="feature-card">
+      <div class="feature-icon-wrap" style="background:rgba(240,180,74,0.12);">💳</div>
+      <div class="feature-title">One-Stop Service Hub</div>
+      <p class="feature-desc">In-app payment, electronic tickets, detailed travel reports, and commute reminders — everything managed from one platform so you never fumble for cards again.</p>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY PLANNER -->
+<section class="section" id="routes">
+  <div class="feature-demo-grid">
+    <div>
+      <div class="section-label">Journey Planner</div>
+      <h2 class="section-title">Plan your perfect route</h2>
+      <p class="section-desc">Enter your origin and destination. Choose your priority. City Pulse calculates and compares all available multi-modal options instantly.</p>
+
+      <div class="modes-row">
+        <div class="mode-pill active">🚇 MRT / Subway</div>
+        <div class="mode-pill">🚌 TransJakarta</div>
+        <div class="mode-pill">🛵 Ojek / Grab</div>
+        <div class="mode-pill">🚲 Shared Bike</div>
+        <div class="mode-pill">🚶 Walking</div>
+      </div>
+    </div>
+
+    <div class="planner-panel">
+      <div class="planner-title">Where are you going?</div>
+
+      <div class="planner-input">
+        <span class="input-dot" style="background:var(--accent);"></span>
+        <input type="text" placeholder="From: Current location" value="Sudirman Station">
+      </div>
+      <div style="margin-left:16px;width:1px;height:12px;background:var(--border);margin-bottom:0;"></div>
+      <div class="planner-input">
+        <span class="input-dot" style="background:var(--red);border-radius:2px;"></span>
+        <input type="text" placeholder="To: Destination">
+      </div>
+
+      <div class="prefs-row">
+        <span class="pref-chip active">⚡ Fastest</span>
+        <span class="pref-chip">💰 Cheapest</span>
+        <span class="pref-chip">😌 Comfortable</span>
+        <span class="pref-chip">🌿 Low emissions</span>
+      </div>
+
+      <button class="btn btn-accent" style="width:100%;justify-content:center;padding:13px;" onclick="openPlanner()">
+        Search Routes →
+      </button>
+
+      <div class="plan-results">
+        <div class="plan-option best">
+          <div>
+            <div class="best-badge">BEST MATCH</div>
+            <div class="plan-steps">
+              <div class="plan-step-icon" style="background:rgba(74,240,196,0.12);color:var(--accent);">🚇</div>
+              <span class="plan-connector">›</span>
+              <div class="plan-step-icon" style="background:rgba(74,144,240,0.12);">🚶</div>
+            </div>
+          </div>
+          <div style="flex:1;padding-left:8px;">
+            <div style="font-size:12px;color:var(--text-secondary);">MRT Line 1 · 3 stops + 4 min walk</div>
+          </div>
+          <div>
+            <div class="plan-time" style="color:var(--accent);">14 min</div>
+            <div class="plan-price">Rp 7,000</div>
+          </div>
+        </div>
+
+        <div class="plan-option">
+          <div class="plan-steps">
+            <div class="plan-step-icon" style="background:rgba(74,144,240,0.12);">🚌</div>
+            <span class="plan-connector">›</span>
+            <div class="plan-step-icon" style="background:rgba(164,106,240,0.12);">🚶</div>
+          </div>
+          <div style="flex:1;padding-left:12px;">
+            <div style="font-size:12px;color:var(--text-secondary);">TransJakarta Corridor 1 · 6 stops</div>
+          </div>
+          <div>
+            <div class="plan-time">22 min</div>
+            <div class="plan-price">Rp 3,500</div>
+          </div>
+        </div>
+
+        <div class="plan-option">
+          <div class="plan-steps">
+            <div class="plan-step-icon" style="background:rgba(240,180,74,0.12);">🛵</div>
+          </div>
+          <div style="flex:1;padding-left:12px;">
+            <div style="font-size:12px;color:var(--text-secondary);">Ride-hailing · Door to door</div>
+          </div>
+          <div>
+            <div class="plan-time">31 min</div>
+            <div class="plan-price">Rp 22,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRAFFIC HEATMAP -->
+<section class="section" id="traffic">
+  <div class="section-label">Congestion Analysis</div>
+  <h2 class="section-title">Real-time traffic intelligence</h2>
+  <p class="section-desc">Live spatial visualization of Jakarta's road network, updated continuously from traffic sensors and crowd-sourced data.</p>
+
+  <div class="heatmap-section">
+    <div class="heatmap-grid-container">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;">Jakarta Rush Hour — Live Heatmap</span>
+          <span class="live-badge"><span class="live-dot"></span>UPDATING</span>
+        </div>
+        <div class="heatmap-canvas">
+          <div class="map-grid"></div>
+          <!-- Dense road network -->
+          <div class="map-road map-road-h" style="top:30%;background:rgba(255,255,255,0.06);height:10px;"></div>
+          <div class="map-road map-road-h" style="top:50%;background:rgba(255,255,255,0.06);height:10px;"></div>
+          <div class="map-road map-road-h" style="top:70%;background:rgba(255,255,255,0.06);height:8px;"></div>
+          <div class="map-road map-road-v" style="left:25%;background:rgba(255,255,255,0.06);width:10px;"></div>
+          <div class="map-road map-road-v" style="left:50%;background:rgba(255,255,255,0.06);width:10px;"></div>
+          <div class="map-road map-road-v" style="left:72%;background:rgba(255,255,255,0.06);width:8px;"></div>
+
+          <!-- Severe hotspots (red) -->
+          <div class="hotspot" style="width:100px;height:100px;background:radial-gradient(circle,rgba(240,92,74,0.7) 10%,rgba(240,92,74,0.2) 50%,transparent 70%);top:45%;left:47%;transform:translate(-50%,-50%);animation-delay:0s;"></div>
+          <div class="hotspot" style="width:70px;height:70px;background:radial-gradient(circle,rgba(240,92,74,0.6),transparent 70%);top:26%;left:23%;transform:translate(-50%,-50%);animation-delay:1.5s;"></div>
+
+          <!-- Heavy hotspots (amber) -->
+          <div class="hotspot" style="width:80px;height:80px;background:radial-gradient(circle,rgba(240,180,74,0.55),transparent 70%);top:65%;left:70%;transform:translate(-50%,-50%);animation-delay:0.8s;"></div>
+          <div class="hotspot" style="width:55px;height:55px;background:radial-gradient(circle,rgba(240,180,74,0.5),transparent 70%);top:48%;left:26%;transform:translate(-50%,-50%);animation-delay:2s;"></div>
+
+          <!-- Smooth spots (green) -->
+          <div class="hotspot" style="width:50px;height:50px;background:radial-gradient(circle,rgba(74,240,196,0.4),transparent 70%);top:18%;left:70%;transform:translate(-50%,-50%);animation-delay:1s;"></div>
+
+          <!-- Area labels -->
+          <div class="map-label" style="top:7px;left:8px;font-size:9px;">SCBD</div>
+          <div class="map-label" style="bottom:7px;left:8px;font-size:9px;">Blok M</div>
+          <div class="map-label" style="top:7px;right:8px;font-size:9px;">Menteng</div>
+          <div class="map-label" style="bottom:7px;right:8px;font-size:9px;">Kuningan</div>
+          <div class="map-label" style="top:43%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:var(--red);">Sudirman</div>
+
+          <!-- Legend -->
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;">
+            <span style="font-size:9px;color:var(--red);font-weight:600;">■ Severe</span>
+            <span style="font-size:9px;color:var(--amber);font-weight:600;">■ Heavy</span>
+            <span style="font-size:9px;color:var(--accent);font-weight:600;">■ Smooth</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase;">Top 5 Congested Segments</div>
+        <div class="congestion-list">
+          <div class="congestion-item">
+            <span class="cong-rank">#1</span>
+            <div class="cong-bar-wrap">
+              <div class="cong-label">Jl. Sudirman (Semanggi)</div>
+              <div class="cong-bar" style="width:92%"></div>
+            </div>
+            <span class="cong-index">9.2</span>
+          </div>
+          <div class="congestion-item">
+            <span class="cong-rank">#2</span>
+            <div class="cong-bar-wrap">
+              <div class="cong-label">Jl. Thamrin (HI)</div>
+              <div class="cong-bar" style="width:78%"></div>
+            </div>
+            <span class="cong-index" style="color:var(--amber);">7.8</span>
+          </div>
+          <div class="congestion-item">
+            <span class="cong-rank">#3</span>
+            <div class="cong-bar-wrap">
+              <div class="cong-label">Jl. Gatot Subroto</div>
+              <div class="cong-bar" style="width:71%"></div>
+            </div>
+            <span class="cong-index" style="color:var(--amber);">7.1</span>
+          </div>
+          <div class="congestion-item">
+            <span class="cong-rank">#4</span>
+            <div class="cong-bar-wrap">
+              <div class="cong-label">Jl. HR Rasuna Said</div>
+              <div class="cong-bar" style="width:63%;background:linear-gradient(90deg,var(--amber),#e0c060);"></div>
+            </div>
+            <span class="cong-index" style="color:var(--amber);">6.3</span>
+          </div>
+          <div class="congestion-item">
+            <span class="cong-rank">#5</span>
+            <div class="cong-bar-wrap">
+              <div class="cong-label">Jl. Asia Afrika</div>
+              <div class="cong-bar" style="width:54%;background:linear-gradient(90deg,#c0c040,#a0c030);"></div>
+            </div>
+            <span class="cong-index" style="color:#b0c040;">5.4</span>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Root Cause Breakdown</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text-secondary);">🚗 High traffic volume</span>
+              <span style="color:var(--text-primary);font-weight:600;">42%</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text-secondary);">🚧 Road construction</span>
+              <span style="color:var(--text-primary);font-weight:600;">28%</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text-secondary);">💥 Incidents / accidents</span>
+              <span style="color:var(--text-primary);font-weight:600;">18%</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text-secondary);">⛈️ Weather conditions</span>
+              <span style="color:var(--text-primary);font-weight:600;">12%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="section" id="services">
+  <div class="section-label">One-Stop Services</div>
+  <h2 class="section-title">Every urban service,<br>one platform</h2>
+  <p class="section-desc">No more switching between apps. City Pulse integrates payment, ticketing, planning, and reporting into a single seamless experience.</p>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <span class="service-icon">💳</span>
+      <div class="service-name">In-app Payment</div>
+      <div class="service-desc">Pay for any transport mode with one wallet — linked to e-wallet, bank, or QRIS.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">🎫</span>
+      <div class="service-name">E-Tickets</div>
+      <div class="service-desc">Unified electronic tickets for MRT, TransJakarta, and more. No queues, no cash.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">📊</span>
+      <div class="service-name">Travel Reports</div>
+      <div class="service-desc">Weekly insights on your commute time, spending, and carbon footprint with trends.</div>
+    </div>
+    <div class="service-card">
+      <span class="service-icon">⏰</span>
+      <div class="service-name">Smart Reminders</div>
+      <div class="service-desc">AI-powered departure alerts based on real-time conditions and your schedule.</div>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat-cell">
+      <div class="stat-big">18 min</div>
+      <div class="stat-label-cell">Average commute time saved daily</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-big">4+</div>
+      <div class="stat-label-cell">Transport modes integrated</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-big">98.7%</div>
+      <div class="stat-label-cell">Route data accuracy</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-big">2.4M</div>
+      <div class="stat-label-cell">Daily active commuters</div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT / PROBLEM -->
+<section class="section" id="about">
+  <div class="feature-demo-grid">
+    <div>
+      <div class="section-label">Why City Pulse</div>
+      <h2 class="section-title">Urban commuting<br>is broken. We fixed it.</h2>
+      <p class="section-desc" style="margin-bottom: 24px;">City residents face fragmented apps, unpredictable delays, complicated multi-modal transfers, and zero visibility into what's happening on the network.</p>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);">
+          <span style="font-size:20px;flex-shrink:0;">❌</span>
+          <div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Fragmented experience</div>
+            <div style="font-size:13px;color:var(--text-muted);">Users juggle 4–6 different apps for buses, subway, ride-hailing, and payment.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);">
+          <span style="font-size:20px;flex-shrink:0;">❌</span>
+          <div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Zero real-time visibility</div>
+            <div style="font-size:13px;color:var(--text-muted);">Outdated schedules and no live data means missed buses and wasted time.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);">
+          <span style="font-size:20px;flex-shrink:0;">❌</span>
+          <div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Transfer confusion</div>
+            <div style="font-size:13px;color:var(--text-muted);">No single system guides you through multi-modal connections seamlessly.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Users -->
+    <div>
+      <div class="section-label" style="margin-bottom:16px;">Who It's For</div>
+      <div class="targets-grid" style="grid-template-columns:1fr;margin-top:0;">
+        <div class="target-card">
+          <div class="target-avatar">💼</div>
+          <div class="target-role">Office Workers</div>
+          <div class="target-desc">Fixed daily commutes optimized automatically with departure reminders and live updates on your regular route.</div>
+        </div>
+        <div class="target-card">
+          <div class="target-avatar">🎒</div>
+          <div class="target-role">Students & Frequent Travelers</div>
+          <div class="target-desc">Budget-conscious routing that finds the cheapest multi-modal combination for any urban journey.</div>
+        </div>
+        <div class="target-card">
+          <div class="target-avatar">🗺️</div>
+          <div class="target-role">City Visitors</div>
+          <div class="target-desc">Instant orientation in an unfamiliar transit system with step-by-step guidance and local transport insights.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section style="padding: 0 32px 80px; max-width: 1280px; margin: 0 auto;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:60px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(74,240,196,0.06),transparent);pointer-events:none;"></div>
+    <div style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">Start Commuting Smarter</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;letter-spacing:-0.03em;margin-bottom:16px;">Your city.<br>Your rhythm. Your route.</h2>
+    <p style="font-size:15px;color:var(--text-secondary);max-width:440px;margin:0 auto 36px;line-height:1.7;">Join 2.4 million Jakarta residents who move smarter every day with City Pulse.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="city-pulse-planner.html" class="btn btn-accent btn-lg">Get Started Free</a>
+      <a href="#traffic" class="btn btn-ghost btn-lg">View Live Map</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="nav-logo" style="text-decoration:none;">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0a1a14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+        </svg>
+      </div>
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);letter-spacing:-0.03em;">City Pulse</span>
+    </div>
+    <p>A digital smart mobility platform designed to solve daily urban commuting pain points for city residents across Indonesia.</p>
+  </div>
+
+  <div class="footer-col">
+    <h4>Platform</h4>
+    <a href="#features">Features</a>
+    <a href="#routes">Route Planner</a>
+    <a href="#traffic">Traffic Map</a>
+    <a href="#services">Services</a>
+  </div>
+
+  <div class="footer-col">
+    <h4>Transport</h4>
+    <a href="#">MRT / Subway</a>
+    <a href="#">TransJakarta</a>
+    <a href="#">Ride-Hailing</a>
+    <a href="#">Shared Bikes</a>
+  </div>
+
+  <div class="footer-col">
+    <h4>Company</h4>
+    <a href="#about">About</a>
+    <a href="#">Data Privacy</a>
+    <a href="#">Open Data API</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<div style="text-align:center;padding:20px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);">
+  © 2026 City Pulse Smart Mobility Platform · Jakarta, Indonesia
+</div>
+
+<script>
+  // Mode pill toggle
+  document.querySelectorAll('.mode-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Pref chip toggle
+  document.querySelectorAll('.pref-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.pref-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // Route card selection
+  document.querySelectorAll('.route-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+  });
+
+  // Open journey planner
+  function openPlanner() {
+    const dest = document.getElementById('destInput') ? document.getElementById('destInput').value : '';
+    window.location.href = 'city-pulse-planner.html' + (dest ? '?dest=' + encodeURIComponent(dest) : '');
+  }
+
+  // Nav active link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const st = section.offsetTop - 100;
+      if (window.scrollY >= st) current = section.getAttribute('id');
+    });
+    document.querySelectorAll('.nav-links a').forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+
+  // Animate congestion bars on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.cong-bar').forEach(bar => observer.observe(bar));
+</script>
+
+</body>
+</html>
